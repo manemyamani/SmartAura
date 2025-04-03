@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set Assessment - Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/assessment.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <h2>Set Assessment Details</h2>
+    <form id="assessment-form">
+      <div class="mb-3">
+        <label for="assessmentId" class="form-label">Assessment ID</label>
+        <input type="text" id="assessmentId" name="assessmentId" class="form-control" placeholder="Enter Assessment ID" required>
+      </div>
+      <div class="mb-3">
+        <label for="questionCount" class="form-label">Number of Questions</label>
+        <input type="number" id="questionCount" name="questionCount" class="form-control" placeholder="Enter number of questions" min="1" required>
+      </div>
+      <button type="submit" class="btn btn-submit">Proceed to Host Panel</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async function() {
+      try {
+        let response = await fetch("/get_next_assessment_id");
+        let data = await response.json();
+  
+        if (response.ok) {
+          document.getElementById("assessmentId").value = data.next_assessment_id;
+        } else {
+          console.error("Failed to fetch assessment ID:", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching next assessment ID:", error);
+      }
+    });
+  
+    document.getElementById("assessment-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+  
+      
+      const assessmentId = document.getElementById("assessmentId").value;
+      const questionCount = document.getElementById("questionCount").value;
+  
+      
+      window.location.href = `/host?assessmentId=${encodeURIComponent(assessmentId)}&questionCount=${encodeURIComponent(questionCount)}`;
+    });
+  
+
+    document.getElementById("logout-btn").addEventListener("click", async function() {
+      let response = await fetch("/logout", { method: "GET", credentials: "same-origin" });
+      if (response.ok) {
+        window.location.href = "/login";
+      } else {
+        console.error("Logout failed", response);
+      }
+    });
+  </script>
+  
+
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face Verification - SmartAura</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/face.css') }}">
+</head>
+<body>
+
+  <main>
+    <h1>Face Verification</h1>
+    <p>Please keep your face in the frame. Verification will be done in <span id="timer">10:00</span></p>
+    
+    <div id="webcam-container">
+      <img id="webcam-feed" src="{{ url_for('video_feed') }}" style="width: 100%; max-height: 300px;">
+    </div>
+
+    <div id="status-message"></div>
+    <p>If you leave the frame, verification will fail.</p>
+  </main>
+
+  <script>
+    let timeLeft = 600;
+    let verificationAttempted = false;
+    let speechSynth = window.speechSynthesis;
+
+    function speak(text, priority = 'normal') {
+      if (!speechSynth) {
+        console.log("Text-to-speech not supported");
+        updateStatus(text, 'error');
+        return;
+      }
+
+      if (priority === 'high') {
+        speechSynth.cancel();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.volume = 1;
+      utterance.rate = 0.9;
+      
+      utterance.onstart = () => {
+        console.log("Speaking:", text);
+      };
+      
+      utterance.onerror = (event) => {
+        console.error("Speech error:", event);
+        updateStatus(text, 'error');
+      };
+
+      speechSynth.speak(utterance);
+    }
+
+    function updateStatus(message, type = 'info') {
+      const statusElement = document.getElementById('status-message');
+      statusElement.textContent = message;
+      statusElement.className = type;
+    }
+
+    function startTimer() {
+      const timerElement = document.getElementById('timer');
+      const countdown = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 30 && timeLeft % 10 === 0) {
+          speak(`Verification will start in ${timeLeft} seconds`, 'high');
+        }
+        
+        if (timeLeft === 0 && !verificationAttempted) {
+          clearInterval(countdown);
+          verifyFaceAutomatically();
+        }
+        timeLeft--;
+      }, 10);
+    }
+
+    async function verifyFaceAutomatically() {
+      if (verificationAttempted) return;
+      verificationAttempted = true;
+      
+      const assessmentID = sessionStorage.getItem("assessment_id");
+      if (!assessmentID) {
+        speak("Session expired. Please restart the process.", 'high');
+        updateStatus("Session expired. Please restart the process.", 'error');
+        setTimeout(() => window.location.href = "/", 3000);
+        return;
+      }
+
+      updateStatus("Verifying your face... Please wait.", 'warning');
+      speak("Starting face verification process.");
+
+      try {
+        const response = await fetch('/verify-face', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assessment_id: assessmentID })
+        });
+        
+        const data = await response.json();
+        
+        if (data.voice_alert) {
+          speak(data.voice_alert, 'high');
+        }
+        
+        if (response.ok && data.success) {
+          updateStatus(`Verification successful! Welcome ${data.username}`, 'success');
+          sessionStorage.setItem("user_id", data.username);
+          
+          setTimeout(() => {
+            window.location.href = `${data.redirect_url}?assessment_id=${assessmentID}&user_id=${data.username}`;
+          }, 3000);
+        } else {
+          updateStatus(data.error || "Face verification failed.", 'error');
+          setTimeout(() => window.location.href = "/", 5000);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        speak("Network error occurred. Please try again.", 'high');
+        updateStatus("Network error occurred. Please try again.", 'error');
+        setTimeout(() => window.location.href = "/", 5000);
+      }
+    }
+
+    window.onload = () => {
+      if (!speechSynth) {
+        updateStatus("Voice alerts not supported in your browser", 'warning');
+      } else {
+        speak("Please position your face in the frame. Face verification will begin automatically.");
+      }
+      
+      startTimer();
+      
+      document.addEventListener('click', () => {
+        if (timeLeft > 30) {
+          speak("You can manually verify by clicking the verify button when ready.");
+        }
+      });
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+      }
+    });
+  </script>
+
+</body>
+</html>

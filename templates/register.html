@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartAura - Register</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+<body>
+  <header>
+    <h1 class="logo">SmartAura</h1>
+  </header>
+  
+  <main>
+    <div class="register-container">
+      <h2>Create an Account</h2>
+      <form id="register-form">
+        <div class="form-group">
+          <label for="first-name">First Name</label>
+          <input type="text" id="first-name" name="first_name" placeholder="Enter your first name" required>
+        </div>
+        <div class="form-group">
+          <label for="last-name">Last Name</label>
+          <input type="text" id="last-name" name="last_name" placeholder="Enter your last name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="mobile">Mobile</label>
+          <input type="tel" id="mobile" name="mobile" placeholder="Enter your mobile number" pattern="[0-9]{10}" required>
+        </div>
+        <div class="form-group">
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" name="date_of_birth" required>
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <div class="radio-group">
+            <input type="radio" id="male" name="gender" value="Male" required>
+            <label for="male">Male</label>
+            <input type="radio" id="female" name="gender" value="Female">
+            <label for="female">Female</label>
+            <input type="radio" id="other" name="gender" value="Other">
+            <label for="other">Other</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirm Password</label>
+          <input type="password" id="confirm-password" name="confirm_password" placeholder="Confirm your password" required>
+        </div>
+        <button type="submit" class="register-btn">Register</button>
+      </form>
+      <p class="login-link">
+        Already have an account? <a href="{{ url_for('login') }}">Login Here</a>
+      </p>
+      <p id="message"></p>
+    </div>
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 SmartAura. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById("register-form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      
+      let formData = new FormData(this);
+
+      fetch("{{ url_for('register') }}", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        let messageElement = document.getElementById("message");
+        if (data.success) {
+          messageElement.style.color = "green";
+          messageElement.textContent = data.success;
+          setTimeout(() => {
+            window.location.href = "{{ url_for('login') }}";
+          }, 2000);
+        } else {
+          messageElement.style.color = "red";
+          messageElement.textContent = data.error;
+        }
+      })
+      .catch(error => console.error("Error:", error));
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,182 @@
+/* SmartAura Examination System Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    padding: 0 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h2 {
+    color: #5e60ce;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 12px;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #5e60ce, #64dfdf);
+    border-radius: 3px;
+}
+
+h3 {
+    color: #2b2d42;
+    font-size: 1.5rem;
+    margin: 1.5rem 0 1rem;
+    font-weight: 600;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    text-align: left;
+    max-width: 500px;
+}
+
+li {
+    font-size: 1.1rem;
+    color: #2b2d42;
+    margin-bottom: 0.8rem;
+    position: relative;
+    padding-left: 25px;
+    line-height: 1.6;
+}
+
+li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #64dfdf;
+    font-size: 1.4rem;
+}
+
+p {
+    font-size: 1.2rem;
+    color: #2b2d42;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+.button-container {
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.start-button {
+    background: linear-gradient(90deg, #5e60ce, #6930c3);
+    color: white;
+    font-size: 1.2rem;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(94, 96, 206, 0.3);
+    font-weight: 600;
+}
+
+.start-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(94, 96, 206, 0.4);
+}
+
+.start-button:active {
+    transform: translateY(-1px);
+}
+
+/* Add decorative elements */
+.container::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 150px;
+    height: 150px;
+    background-color: rgba(100, 223, 223, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.container::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    right: 10%;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(94, 96, 206, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+/* Highlight the acknowledgment section */
+.container p {
+    font-weight: 600;
+    color: #5e60ce;
+    background-color: rgba(94, 96, 206, 0.1);
+    padding: 12px 20px;
+    border-radius: 8px;
+    border-left: 4px solid #5e60ce;
+}
+
+/* Animation for better UX */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    h2 {
+        font-size: 2rem;
+    }
+    
+    h3 {
+        font-size: 1.3rem;
+    }
+    
+    p, li {
+        font-size: 1rem;
+    }
+    
+    .start-button {
+        width: 100%;
+        padding: 0.8rem 1.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    h2 {
+        font-size: 1.8rem;
+    }
+    
+    .container {
+        padding: 0 15px;
+    }
+}

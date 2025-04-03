@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartAura - Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+  <style>
+    .back-button {
+  position: relative;
+  display: inline-block;
+  margin-top: -5px;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 8px 15px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover {
+  background-color: #ddd;
+}
+
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding-left: 20px;
+}
+
+
+  </style>
+</head>
+<body>
+
+
+  <header>
+    <h1 class="logo">SmartAura</h1>
+  </header>
+  
+  <main>
+    <a href="{{ url_for('landing_page') }}" class="back-button">⬅ Back</a>
+
+
+    <div class="login-container">
+      <h2>Login</h2>
+      <div id="error-message" style="color: red;"></div>
+      <form id="login-form" action="{{ url_for('login') }}" method="POST">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="login-btn" name="submit">Login</button>
+      </form>
+      <p class="create-account">
+        Don't have an account? <a href="{{ url_for('register') }}">Create an account</a>
+      </p>
+    </div>
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 SmartAura. All rights reserved.</p>
+  </footer>
+  <script>
+      document.getElementById("login-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        let formData = new FormData(this);
+      
+        fetch("{{ url_for('login') }}", {
+          method: "POST",
+          body: formData,
+          headers: { "X-Requested-With": "XMLHttpRequest" }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              document.getElementById("error-message").innerText = data.error;
+            }
+            else {
+              window.location.href = "/assessment";
+              }
+            })
+            .catch(error => console.error("Error:", error));
+          });
+
+  </script>
+
+</body>
+</html>

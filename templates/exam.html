@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Exam</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/exam.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+</head>
+
+<body>
+    <header>
+        <div class="exam-title">JEE MAINS<span class="mock-exam-label">mains Exam</span></div>
+        <h3 id="candidate-name"></h3>
+        <div class="timer-display" id="exam-timer">03:00:00</div>
+        <button class="submit-btn" id="submit-exam" onclick="submitExam()">Submit</button>
+    </header>
+    <form id="exam-form" action="/submit_exam" method="POST">
+        <input type="hidden" id="assessmentId" name="assessment_id">
+        <input type="hidden" id="userId" name="user_id">
+    </form>
+
+    <div class="navigation">
+        <div class="nav-item topics">Topics</div>
+        
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <video id="video" autoplay muted></video>
+            <div class="question-panel">
+                <div class="question-box">
+                    <p><strong>Question <span id="question-number">1</span></strong></p>
+                    <div id="question-text">Loading...</div>
+                </div>
+            </div>
+
+            <div class="options-panel">
+                <div class="options-box">
+                    <p>Options</p>
+                </div>
+                <div class="options">
+                    <label for="opt1"><input type="radio" name="option" id="opt1" value="1"> <span
+                            id="opt1-text"></span></label>
+                    <label for="opt2"><input type="radio" name="option" id="opt2" value="2"> <span
+                            id="opt2-text"></span></label>
+                    <label for="opt3"><input type="radio" name="option" id="opt3" value="3"> <span
+                            id="opt3-text"></span></label>
+                    <label for="opt4"><input type="radio" name="option" id="opt4" value="4"> <span
+                            id="opt4-text"></span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-navigation">
+        <button id="previous" class="nav-btn prev-btn">Previous</button>
+        <button id="repeat" class="nav-btn repeat-btn">Repeat Question</button>
+        <button id="next" class="nav-btn save-next-btn">Next</button>
+    </div>
+
+    <div id="debug-log"></div>
+
+    <script>
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let debugMode = true; 
+        let examDuration = 180 * 60; 
+        let timerInterval;
+        let userResponses = {};
+        let questionsBySubject = {};
+        let currentSubject = "";
+
+        function log(message) {
+            if (debugMode) {
+                const logDiv = document.getElementById('debug-log');
+                logDiv.style.display = 'block';
+                logDiv.innerHTML += message + '<br>';
+                logDiv.scrollTop = logDiv.scrollHeight;
+                console.log(message);
+            }
+        }
+
+        function speakText(text) {
+            speechSynthesis.cancel();
+
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speechSynthesis.speak(speech);
+        }
+
+        function readInstructions() {
+            const questionNumber = document.getElementById("question-number").innerText;
+            const questionText = document.getElementById("question-text").innerText.trim();
+
+            const opt1 = document.getElementById("opt1-text").innerText.trim();
+            const opt2 = document.getElementById("opt2-text").innerText.trim();
+            const opt3 = document.getElementById("opt3-text").innerText.trim();
+            const opt4 = document.getElementById("opt4-text").innerText.trim();
+
+            const speechText = `Question ${questionNumber}. ${questionText}. 
+            Option 1: ${opt1}. 
+            Option 2: ${opt2}. 
+            Option 3: ${opt3}. 
+            Option 4: ${opt4}.`;
+
+            speakText(speechText);
+        }
+
+        function loadQuestion() {
+            if (!questions || questions.length === 0) return;
+
+            let questionData = questions[currentQuestionIndex];
+            document.getElementById("question-number").innerText = currentQuestionIndex + 1;
+            document.getElementById("question-text").innerText = questionData.question;
+            document.getElementById("opt1-text").innerText = questionData.option1;
+            document.getElementById("opt2-text").innerText = questionData.option2;
+            document.getElementById("opt3-text").innerText = questionData.option3;
+            document.getElementById("opt4-text").innerText = questionData.option4;
+
+            document.querySelectorAll('input[name="option"]').forEach(input => {
+                input.checked = false;
+            });
+            document.querySelectorAll(".options label").forEach(label => {
+                label.classList.remove("selected");
+            });
+
+            if (userResponses[currentSubject] && userResponses[currentSubject][currentQuestionIndex]) {
+                const savedOption = userResponses[currentSubject][currentQuestionIndex];
+                document.getElementById(`opt${savedOption}`).checked = true;
+                document.querySelector(`label[for="opt${savedOption}"]`).classList.add("selected");
+            }
+
+            setTimeout(readInstructions, 500);
+        }
+
+        function selectOption(optionId) {
+            document.querySelectorAll(".options label").forEach(label => label.classList.remove("selected"));
+            document.querySelectorAll('input[name="option"]').forEach(input => {
+                input.checked = false;
+            });
+
+            document.getElementById(optionId).checked = true;
+            document.querySelector(`label[for="${optionId}"]`).classList.add("selected");
+
+            const optionNumber = optionId.replace("opt", "");
+            userResponses[currentSubject][currentQuestionIndex] = optionNumber;
+
+            speakText(`Option ${optionNumber} has been marked.`);
+        }
+
+        function formatTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const remainingSeconds = seconds % 60;
+
+            return [
+                hours.toString().padStart(2, '0'),
+                minutes.toString().padStart(2, '0'),
+                remainingSeconds.toString().padStart(2, '0')
+            ].join(':');
+        }
+
+        function updateTimer() {
+            examDuration--;
+            document.getElementById('exam-timer').innerText = formatTime(examDuration);
+
+            if (examDuration <= 0) {
+                clearInterval(timerInterval);
+                submitExam();
+            }
+        }
+
+        function submitExam() {
+    speechSynthesis.cancel();
+    speakText("Your exam is being submitted. Please wait.");
+
+    let assessmentId = document.getElementById("assessmentId").value;
+    let userId = document.getElementById("userId").value;
+
+    if (!assessmentId || !userId) {
+        speakText("Error: Assessment ID or User ID is missing. Please restart the exam.");
+        return;
+    }
+    saveCurrentResponses();
+    let responses = {
+        assessment_id: assessmentId,
+        user_id: userId
+    };
+
+    let allQuestions = [];
+    Object.keys(questionsBySubject).forEach(subject => {
+        allQuestions = allQuestions.concat(questionsBySubject[subject]);
+    });
+
+    allQuestions.forEach((question, index) => {
+        const subject = question.subject;
+        const subjectQuestionIndex = questionsBySubject[subject].findIndex(q => q.id === question.id);
+        const userResponse = userResponses[subject] ? userResponses[subject][subjectQuestionIndex] : null;
+
+        responses[`response${question.id}`] = userResponse;
+    });
+
+    fetch("/submit_exam", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(responses)
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                speakText("Exam Completed! Your responses have been submitted successfully.");
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 5000);
+            } else {
+                speakText("Error submitting exam. Please contact the exam administrator.");
+                console.error("Error submitting exam:", result.error);
+            }
+        })
+        .catch(error => {
+            speakText("Error submitting exam. Please contact the exam administrator.");
+            console.error("Submission error:", error);
+        });
+}
+
+        function reportRemainingTime() {
+            const hours = Math.floor(examDuration / 3600);
+            const minutes = Math.floor((examDuration % 3600) / 60);
+            const seconds = examDuration % 60;
+
+            const formattedTime = formatTime(examDuration);
+            speakText(`The time left is ${formattedTime}.`);
+        }
+function goToNextQuestion() {
+    if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+        loadQuestion();
+        speakText("Moving to next question");
+    } else {
+        speakText(`This is the last question from the ${currentSubject} section. No more questions available.`);
+    }
+}
+function goToPreviousQuestion() {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion();
+        speakText("Moving to previous question");
+    } else {
+        speakText(`This is the first question of the ${currentSubject} section.`);
+    }
+}
+        function updateNavigation(subjects) {
+            const nav = document.querySelector('.navigation');
+            while (nav.children.length > 1) {
+                nav.removeChild(nav.lastChild);
+            }
+            subjects.forEach(subject => {
+                const navItem = document.createElement('div');
+                navItem.className = 'nav-item';
+                navItem.textContent = subject.toUpperCase();
+                navItem.addEventListener('click', function () {
+                    setActiveSubject(subject);
+                });
+                nav.appendChild(navItem);
+            });
+        }
+
+        function setActiveSubject(subject) {
+            document.querySelectorAll('.navigation .nav-item').forEach(item => {
+                if (item.textContent === subject.toUpperCase()) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            if (currentSubject && userResponses[currentSubject]) {
+                saveCurrentResponses();
+            }
+
+            currentSubject = subject;
+
+            questions = questionsBySubject[subject];
+            currentQuestionIndex = 0;
+            loadQuestion();
+            speakText(`Switched to ${subject} section.`);
+        }
+
+        function saveCurrentResponses() {
+            const selectedOption = document.querySelector('input[name="option"]:checked');
+            if (selectedOption) {
+                const optionNumber = selectedOption.id.replace("opt", "");
+                userResponses[currentSubject][currentQuestionIndex] = optionNumber;
+            }
+        }
+
+        function initializeUserResponses() {
+            userResponses = {};
+            Object.keys(questionsBySubject).forEach(subject => {
+                userResponses[subject] = new Array(questionsBySubject[subject].length).fill(null);
+            });
+        }
+
+        $(document).ready(function () {
+            const assessmentId = sessionStorage.getItem("assessment_id");
+            if (debugMode) {
+                document.getElementById('debug-log').style.display = 'block';
+            }
+            timerInterval = setInterval(updateTimer, 1000);
+            if (!assessmentId) {
+                alert("No assessment ID found. Please start the assessment process again.");
+                window.location.href = "/";
+                return;
+            }
+
+            $.ajax({
+                url: "http://127.0.0.1:5000/get_questions",
+                method: "GET",
+                data: { assessment_id: assessmentId },
+                dataType: "json"
+            })
+                .done(function (data) {
+                    if (data.error) {
+                        alert(data.error);
+                        window.location.href = "/";
+                        return;
+                    }
+
+                    let candidateName = data.candidate_name;
+                    document.getElementById("candidate-name").textContent = "Candidate: " + candidateName;
+
+                    questions = data.questions;
+
+                    if (questions.length === 0) {
+                        alert("No questions found for this assessment.");
+                        window.location.href = "/";
+                        return;
+                    }
+
+                    questionsBySubject = {};
+                    questions.forEach(question => {
+                        if (!questionsBySubject[question.subject]) {
+                            questionsBySubject[question.subject] = [];
+                        }
+                        questionsBySubject[question.subject].push(question);
+                    });
+
+                    updateNavigation(Object.keys(questionsBySubject));
+
+                    if (Object.keys(questionsBySubject).length > 0) {
+                        currentSubject = Object.keys(questionsBySubject)[0];
+                        setActiveSubject(currentSubject);
+
+                        questions = questionsBySubject[currentSubject];
+
+                        initializeUserResponses();
+                        currentQuestionIndex = 0;
+                        loadQuestion();
+                    }
+                })
+                .fail(function (jqXHR, textStatus, errorThrown) {
+                    console.log("Error fetching questions: " + textStatus + " - " + errorThrown);
+                    alert("Failed to load questions. Please try again.");
+                });
+
+            if (debugMode) {
+                questions = [
+                    {
+                        question: "If the roots of the equation x² - 6x + k = 0 are real and equal, what is the value of k?",
+                        option1: "8",
+                        option2: "9",
+                        option3: "10",
+                        option4: "12",
+                        subject: "MATHEMATICS"
+                    },
+                    {
+                        question: "In a triangle ABC, if angle A equals 60 degrees and angle B equals 45 degrees, what is angle C?",
+                        option1: "75 degrees",
+                        option2: "80 degrees",
+                        option3: "65 degrees",
+                        option4: "70 degrees",
+                        subject: "MATHEMATICS"
+                    },
+                    {
+                        question: "What is the derivative of f(x) = x³ - 4x² + 2x - 7?",
+                        option1: "3x² - 8x + 2",
+                        option2: "3x² - 4x + 2",
+                        option3: "3x² - 8x",
+                        option4: "x² - 8x + 2",
+                        subject: "MATHEMATICS"
+                    }
+                ];
+            }
+        });
+
+        $("#next").click(function () {
+            goToNextQuestion();
+        });
+
+        $("#previous").click(function () {
+            goToPreviousQuestion();
+        });
+
+        $("#repeat").click(function () {
+            readInstructions();
+        });
+
+        $("#-exam").click(function () {
+            submitExam();
+        });
+
+        $('input[name="option"]').change(function () {
+            const optionId = $(this).attr('id');
+            selectOption(optionId);
+        });
+
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.lang = "en-US";
+
+        let recognitionRunning = false;
+
+        function processSpeechCommand(transcript) {
+    transcript = transcript.toLowerCase().trim();
+    log("Recognized: " + transcript);
+
+    const option1Patterns = ["option 1", "option one", "first option", "choice 1", "answer 1"];
+    const option2Patterns = ["option 2", "option two", "second option", "choice 2", "answer 2"];
+    const option3Patterns = ["option 3", "option three", "third option", "choice 3", "answer 3"];
+    const option4Patterns = ["option 4", "option four", "fourth option", "choice 4", "answer 4"];
+
+    const nextPatterns = ["next", "next question"];
+    const prevPatterns = ["previous", "previous question", "go back", "prev"];
+    const repeatPatterns = ["repeat", "repeat question", "read question"];
+    const submitPatterns = ["submit", "submit exam", "finish", "finish exam"];
+    const timePatterns = ["time", "time left", "remaining time", "remaining tym"];
+    
+    const sectionTransitionPattern = "move to section";
+    function containsAny(patterns) {
+        return patterns.some(pattern => transcript.includes(pattern));
+    }
+    if (transcript.includes(sectionTransitionPattern)) {
+        const parts = transcript.split(sectionTransitionPattern);
+        
+        if (parts.length > 1) {
+            const requestedSection = parts[1].trim();
+            const availableSections = Object.keys(questionsBySubject);
+            const matchedSection = availableSections.find(section => 
+                section.toLowerCase() === requestedSection ||
+                section.toLowerCase().includes(requestedSection)
+            );
+            
+            if (matchedSection) {
+                log(`Switching to ${matchedSection} section by voice command`);
+                setActiveSubject(matchedSection);
+                return;
+            } else {
+                speakText(`Section ${requestedSection} not found. Available sections are: ${availableSections.join(", ")}`);
+                return;
+            }
+        }
+    }
+    
+    if (containsAny(option1Patterns)) {
+        log("Selecting option 1");
+        selectOption("opt1");
+        return;
+    }
+    else if (containsAny(option2Patterns)) {
+        log("Selecting option 2");
+        selectOption("opt2");
+        return;
+    }
+    else if (containsAny(option3Patterns)) {
+        log("Selecting option 3");
+        selectOption("opt3");
+        return;
+    }
+    else if (containsAny(option4Patterns)) {
+        log("Selecting option 4");
+        selectOption("opt4");
+        return;
+    }
+    if (containsAny(nextPatterns)) {
+        log("Going to next question");
+        goToNextQuestion();
+        return;
+    }
+    else if (containsAny(prevPatterns)) {
+        log("Going to previous question");
+        goToPreviousQuestion();
+        return;
+    }
+    else if (containsAny(repeatPatterns)) {
+        log("Repeating question");
+        readInstructions();
+        return;
+    }
+    else if (containsAny(submitPatterns)) {
+        log("Submitting exam");
+        submitExam();
+        return;
+    }
+    else if (containsAny(timePatterns)) {
+        log("Reporting remaining time");
+        reportRemainingTime();
+        return;
+    }
+
+    Object.keys(questionsBySubject).forEach(subject => {
+        if (transcript.includes(subject.toLowerCase())) {
+            log(`Switching to ${subject} section`);
+            setActiveSubject(subject);
+            return;
+        }
+    });
+}
+        recognition.onresult = function (event) {
+            const last = event.results.length - 1;
+            let transcript = event.results[last][0].transcript;
+            processSpeechCommand(transcript);
+        };
+
+        recognition.onend = function () {
+            if (recognitionRunning) {
+                log("Recognition restarted");
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        log("Error restarting recognition: " + e.message);
+                        setTimeout(() => {
+                            if (recognitionRunning) recognition.start();
+                        }, 10000);
+                    }
+                }, 250);
+            }
+        };
+
+        recognition.onerror = function (event) {
+            log("Recognition error: " + event.error);
+            setTimeout(() => {
+                if (recognitionRunning) {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        log("Error restarting after error: " + e.message);
+                    }
+                }
+            }, 1000);
+        };
+
+        recognitionRunning = true;
+        try {
+            recognition.start();
+            log("Speech recognition started");
+        } catch (e) {
+            log("Error starting speech recognition: " + e.message);
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'd' && e.ctrlKey) {
+                debugMode = !debugMode;
+                document.getElementById('debug-log').style.display = debugMode ? 'block' : 'none';
+                if (debugMode) {
+                    log("Debug mode activated");
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowRight') {
+                goToNextQuestion();
+            } else if (e.key === 'ArrowLeft') {
+                goToPreviousQuestion();
+            } else if (e.key === 'r') {
+                readInstructions();
+            } else if (e.key === 't') {
+                reportRemainingTime();
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const assessmentID = urlParams.get("assessment_id") || sessionStorage.getItem("assessment_id");
+            const userID = urlParams.get("user_id") || sessionStorage.getItem("user_id");
+
+            if (assessmentID && userID) {
+                document.getElementById("assessmentId").value = assessmentID;
+                document.getElementById("userId").value = userID;
+            } else {
+                alert("Session expired. Please restart the process.");
+                window.location.href = "/";
+            }
+        });
+    </script>
+    <script>
+    async function setupCamera() {
+  const video = document.getElementById('video');
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
+  await new Promise((resolve) => (video.onloadedmetadata = resolve));
+}
+
+async function setupCamera() {
+  const video = document.getElementById('video');
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  video.srcObject = stream;
+  await new Promise((resolve) => (video.onloadedmetadata = resolve));
+}
+
+async function monitor() {
+  const model = await blazeface.load();
+  const video = document.getElementById('video');
+  
+  let multipleFaceDetections = 0;
+  let isCurrentlyWarning = false;
+  let isLookingAwayWarning = false;
+  let consecutiveMultipleFaces = 0;
+  let lastDetectionTime = Date.now();
+  
+  setInterval(async () => {
+    try {
+      const predictions = await model.estimateFaces(video, false);
+      
+      if (!predictions || !Array.isArray(predictions)) {
+        log("Invalid face detection result");
+        return;
+      }
+      
+      const currentTime = Date.now();
+      const timeSinceLastDetection = currentTime - lastDetectionTime;
+      lastDetectionTime = currentTime;
+      
+      if (timeSinceLastDetection > 5000) {
+        consecutiveMultipleFaces = 0;
+      }
+
+      if (predictions.length > 1) {
+        if (!isCurrentlyWarning) {
+          speakText("Multiple faces detected. Only one person should be visible.");
+          isCurrentlyWarning = true;
+          log("Multiple faces detected: " + predictions.length);
+        }
+        
+        consecutiveMultipleFaces++;
+        
+        log("Consecutive multiple faces: " + consecutiveMultipleFaces);
+        
+        if (consecutiveMultipleFaces > 3) {
+          log("Multiple face violations threshold reached. Submitting exam...");
+          speakText("Multiple face violations detected. Submitting exam.");
+          
+          submitExam();
+        }
+      } else {
+        
+        isCurrentlyWarning = false;        
+        
+        if (consecutiveMultipleFaces > 0) {
+          consecutiveMultipleFaces--;
+        }
+        
+        if (predictions.length === 1) {
+          const face = predictions[0];
+          if (face.landmarks && face.landmarks.length >= 3) {
+            const leftEye = face.landmarks[0];
+            const rightEye = face.landmarks[1];
+            const nose = face.landmarks[2];
+            const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
+            const nosePosition = nose[0] - ((leftEye[0] + rightEye[0]) / 2);
+          }
+        }
+      }
+    } catch (error) {
+      log("Face detection error: " + error.message);
+    }
+  }, 1000);
+}
+async function init() {
+  try {
+    await setupCamera();
+    log("Camera initialized successfully");
+    monitor();
+    log("Face monitoring started");
+  } catch (error) {
+    log("Camera initialization error: " + error.message);
+  }
+}
+init();
+</script>
+</body>
+</html>

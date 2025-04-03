@@ -1,0 +1,216 @@
+/* Registration Page CSS */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: linear-gradient(90deg, #5e60ce, #64dfdf);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  position: relative;
+}
+
+.register-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem 0;
+  transition: all 0.3s ease;
+  border-top: 4px solid #5e60ce;
+}
+
+.register-container:hover {
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+h2 {
+  color: #5e60ce;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #5e60ce, #64dfdf);
+  border-radius: 3px;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2b2d42;
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+input[type="date"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: #5e60ce;
+  box-shadow: 0 0 0 3px rgba(94, 96, 206, 0.1);
+}
+
+.radio-group {
+  display: flex;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.radio-group input[type="radio"] {
+  margin-right: 5px;
+}
+
+.register-btn {
+  width: 100%;
+  background: linear-gradient(90deg, #5e60ce, #64dfdf);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.register-btn:hover {
+  background: linear-gradient(90deg, #4e50be, #54cfcf);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(94, 96, 206, 0.3);
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  color: #2b2d42;
+}
+
+.login-link a {
+  color: #6930c3;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.login-link a:hover {
+  color: #5e60ce;
+  text-decoration: underline;
+}
+
+#message {
+  text-align: center;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 15px;
+}
+
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  margin-top: auto;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Decorative elements */
+main::before {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 150px;
+  height: 150px;
+  background-color: rgba(100, 223, 223, 0.1);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+main::after {
+  content: '';
+  position: absolute;
+  bottom: 10%;
+  right: 10%;
+  width: 200px;
+  height: 200px;
+  background-color: rgba(94, 96, 206, 0.1);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-container {
+      padding: 1.5rem;
+  }
+  
+  .radio-group {
+      flex-direction: column;
+      gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+      padding: 1rem;
+  }
+  
+  .register-container {
+      padding: 1.2rem;
+      margin: 1rem 0;
+  }
+  
+  .logo {
+      font-size: 1.8rem;
+  }
+}

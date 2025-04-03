@@ -1,0 +1,182 @@
+/* Enhanced Face Verification Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  }
+  
+  main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    padding: 0 20px;
+  }
+  
+  h1 {
+    color: #5e60ce;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 12px;
+  }
+  
+  h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #5e60ce, #64dfdf);
+    border-radius: 3px;
+  }
+  
+  p {
+    font-size: 1.2rem;
+    color: #2b2d42;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    line-height: 1.6;
+  }
+  
+  p:last-of-type {
+    font-weight: 600;
+    color: #5e60ce;
+    margin-top: 1.5rem;
+    background-color: rgba(94, 96, 206, 0.1);
+    padding: 12px 20px;
+    border-radius: 8px;
+    border-left: 4px solid #5e60ce;
+  }
+  
+  #timer {
+    font-weight: 700;
+    color: #6930c3;
+    background-color: rgba(105, 48, 195, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  
+  #webcam-container {
+    width: 400px;
+    height: 300px;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border: 3px solid #5e60ce;
+    transition: all 0.3s ease;
+  }
+  
+  #webcam-container:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+  }
+  
+  #webcam-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Add a small square outline to indicate where the face should be */
+  #webcam-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px;
+    height: 150px;
+    border: 2px dashed #64dfdf;
+    border-radius: 8px;
+    z-index: 10;
+    pointer-events: none;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(100, 223, 223, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(100, 223, 223, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(100, 223, 223, 0);
+    }
+  }
+  
+  /* Add decorative elements */
+  .decorative-circle {
+    position: fixed;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(94, 96, 206, 0.2), rgba(100, 223, 223, 0.2));
+    z-index: -1;
+  }
+  
+  main::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 150px;
+    height: 150px;
+    background-color: rgba(100, 223, 223, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+  }
+  
+  main::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    right: 10%;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(94, 96, 206, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    h1 {
+      font-size: 2rem;
+    }
+    
+    p {
+      font-size: 1rem;
+    }
+    
+    #webcam-container {
+      width: 320px;
+      height: 240px;
+    }
+    
+    #webcam-container::after {
+      width: 120px;
+      height: 120px;
+    }
+  }
+  
+  @media (max-width: 400px) {
+    h1 {
+      font-size: 1.8rem;
+    }
+    
+    #webcam-container {
+      width: 280px;
+      height: 210px;
+    }
+    
+    #webcam-container::after {
+      width: 100px;
+      height: 100px;
+    }
+  }

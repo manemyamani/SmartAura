@@ -1,0 +1,453 @@
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+:root {
+  --primary-color: #5e60ce;
+  --secondary-color: #64dfdf;
+  --accent-color: #6930c3;
+  --text-color: #2b2d42;
+  --light-text: #ffffff;
+  --background-color: #f8f9fa;
+  --card-bg: #ffffff;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --border-radius: 8px;
+  --transition: all 0.3s ease;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header & Navigation */
+header {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  padding: 1rem 5%;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  color: var(--light-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.login-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--light-text);
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.login-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Main Content */
+main {
+  flex: 1;
+  padding: 2rem 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 800px;
+  margin: 0 auto;
+  height: 100vh;
+  text-align: center;
+}
+
+.hero-section {
+  max-width: 1000px;
+  margin: 3rem auto;
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, var(--secondary-color) 0%, rgba(100, 223, 223, 0) 70%);
+  opacity: 0.5;
+  z-index: 0;
+}
+
+h1 {
+  color: var(--primary-color);
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+main p {
+  font-size: 1.2rem;
+  color: var(--text-color);
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+}
+
+main p:last-of-type {
+  font-weight: 600;
+  color: #e63946;
+  margin-top: 1.5rem;
+}
+
+.cta-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  color: var(--light-text);
+  padding: 0.8rem 1.8rem;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-block;
+  transition: var(--transition);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 15px rgba(105, 48, 195, 0.3);
+}
+
+.cta-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(105, 48, 195, 0.4);
+}
+
+/* Face Verification Specific Styles */
+#webcam-container {
+  width: 400px;
+  height: 300px;
+  margin: 0 auto;
+  position: relative;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 3px solid var(--primary-color);
+}
+
+#webcam-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#timer {
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+/* Add a small square outline to indicate where the face should be */
+#webcam-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  border: 2px dashed var(--secondary-color);
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(100, 223, 223, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(100, 223, 223, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(100, 223, 223, 0);
+  }
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: var(--card-bg);
+  padding: 2rem;
+  border-radius: var(--border-radius);
+  width: 90%;
+  max-width: 500px;
+  box-shadow: var(--shadow);
+  animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+#assessment-id {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  transition: var(--transition);
+}
+
+#assessment-id:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(94, 96, 206, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+  flex: 1;
+}
+
+.btn:first-child {
+  background-color: var(--primary-color);
+  color: var(--light-text);
+}
+
+.btn:first-child:hover {
+  background-color: var(--accent-color);
+}
+
+.btn.cancel {
+  background-color: #f8f9fa;
+  color: var(--text-color);
+  border: 1px solid #ddd;
+}
+
+.btn.cancel:hover {
+  background-color: #e9ecef;
+}
+
+/* Footer */
+footer {
+  background-color: var(--text-color);
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.9rem;
+}
+/* ----------------------------------------------------------------------- */
+/* Face Verification Specific Styles */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: #f8f9fa;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 0 20px;
+}
+
+h1 {
+  color: #5e60ce;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+}
+
+p {
+  font-size: 1.2rem;
+  color: #2b2d42;
+  margin-bottom: 2rem;
+  max-width: 500px;
+}
+
+p:last-of-type {
+  font-weight: 600;
+  color: #e63946;
+  margin-top: 1.5rem;
+}
+
+#timer {
+  font-weight: 700;
+  color: #6930c3;
+}
+
+#webcam-container {
+  width: 400px;
+  height: 300px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 3px solid #5e60ce;
+}
+
+#webcam-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Add a small square outline to indicate where the face should be */
+#webcam-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #64dfdf;
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  p {
+    font-size: 1rem;
+  }
+  
+  #webcam-container {
+    width: 320px;
+    height: 240px;
+  }
+  
+  #webcam-container::after {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 400px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  #webcam-container {
+    width: 280px;
+    height: 210px;
+  }
+  
+  #webcam-container::after {
+    width: 100px;
+    height: 100px;
+  }
+}
+/* -------------------------------------------------------------- */
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  main p {
+    font-size: 1.1rem;
+  }
+  
+  #webcam-container {
+    width: 350px;
+    height: 260px;
+  }
+  
+  #webcam-container::after {
+    width: 130px;
+    height: 130px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+  
+  main p {
+    font-size: 1rem;
+  }
+  
+  #webcam-container {
+    width: 280px;
+    height: 210px;
+  }
+  
+  #webcam-container::after {
+    width: 120px;
+    height: 120px;
+  }
+}

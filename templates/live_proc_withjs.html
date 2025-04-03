@@ -1,0 +1,55 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Monitoring System</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+</head>
+<body>
+  <video id="video" autoplay muted></video>
+  <script>
+    async function setupCamera() {
+      const video = document.getElementById('video');
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+      await new Promise((resolve) => (video.onloadedmetadata = resolve));
+    }
+
+    async function monitor() {
+      const model = await blazeface.load();
+      const video = document.getElementById('video');
+
+      setInterval(async () => {
+        const predictions = await model.estimateFaces(video, false);
+
+        if (predictions.length === 0) {
+          alert("No object detected.");
+        } else if (predictions.length > 1) {
+          alert("Multiple objects detected.");
+        } else {
+          const face = predictions[0];
+          const leftEye = face.landmarks[0];
+          const rightEye = face.landmarks[1];
+          const nose = face.landmarks[2];
+
+          const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
+         
+          const nosePosition = nose[0] - ((leftEye[0] + rightEye[0]) / 2);
+
+          const lookingAwayThreshold = 10;
+          if (Math.abs(nosePosition) > lookingAwayThreshold) {
+            alert("User looking away.");
+          }
+        }
+      }, 1000);
+    }
+
+    async function init() {
+      await setupCamera();
+      monitor();
+    }
+
+    init();
+  </script>
+</body>
+</html>

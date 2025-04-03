@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAura Examination System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/instructions.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Instructions for SmartAura Examination System.</h2>
+        <h3>General Guidelines.</h3>
+        <ul>
+            <li>Navigate back to a previous question by saying "Previous question."</li>
+        </ul>
+        <h3>Acknowledgment</h3>
+        <p>By proceeding, you agree to follow the rules and guidelines.</p>
+        <div class="button-container">
+            <button id="startButton" class="start-button" onclick="startExam()">If you are ready to begin the test, say "Start Exam"</button>
+        </div>
+    </div>
+
+    <script>
+        function startExam() {
+            console.log("Redirecting to exam page...");
+            speakText("Redirecting to the exam page.");
+            setTimeout(() => {
+                window.location.href = "/exam";
+            }, 2000);
+        }
+        function readPageContent() {
+            let pageText = document.body.innerText.trim();
+            speakText(pageText);
+        }
+
+        function speakText(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speech.lang = "en-US";
+            speech.rate = 1.0;
+            speech.volume = 1;
+            speech.pitch = 1;
+            speechSynthesis.speak(speech);
+        }
+    
+        let recognition;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+        } else {
+            speakText("Speech recognition is not supported in this browser.");
+        }
+    
+        function startListening() {
+            if (recognition) {
+                console.log("Listening for commands...");
+                recognition.start();
+            }
+        }
+    
+        recognition.onresult = function(event) {
+            let command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+            console.log("Recognized command:", command);
+    
+            if (command.includes("start exam")) {
+                startExam();
+            } else {
+                console.log("Unrecognized command:", command);
+            }
+        };
+    
+        recognition.onerror = function(event) {
+            console.error("Speech Recognition Error:", event.error);
+            if (event.error === "not-allowed") {
+                speakText("Please allow microphone access and try again.");
+            }
+        };
+    
+        recognition.onend = function() {
+            console.log("Speech recognition stopped. Restarting...");
+            setTimeout(startListening, 500);
+        };
+    
+        function speakReminder() {
+            speakText("Please say 'Start Exam' to begin.");
+            setTimeout(speakReminder, 20000);
+        }
+    
+        window.onload = function() {
+            readPageContent();
+            setTimeout(startListening, 3000);
+            setTimeout(speakReminder, 20000);
+        };
+        
+        document.addEventListener("DOMContentLoaded", function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const assessmentID = urlParams.get("assessment_id") || sessionStorage.getItem("assessment_id");
+    const userID = urlParams.get("user_id") || sessionStorage.getItem("user_id");
+
+    if (assessmentID && userID) {
+      sessionStorage.setItem("assessment_id", assessmentID);
+      sessionStorage.setItem("user_id", userID);
+      document.getElementById("start-exam-btn").href = `/exam?assessment_id=${assessmentID}&user_id=${userID}`;
+    } else {
+      alert("Session expired. Please restart the process.");
+      window.location.href = "/";
+    }
+  });
+    </script>
+</body>
+</html>    

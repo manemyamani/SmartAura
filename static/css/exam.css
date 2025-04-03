@@ -1,0 +1,322 @@
+body {
+    font-family: 'Poppins', 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.container {
+    width: 100%;
+    margin: 0;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+header {
+    background: linear-gradient(90deg, #5e60ce, #64dfdf);
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exam-title {
+    text-align: center;
+    flex-grow: 1;
+    font-size: 1.8rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 5px;
+}
+
+.exam-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: white;
+    border-radius: 3px;
+}
+
+.timer-display {
+    background-color: rgba(105, 48, 195, 0.8);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    margin-right: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mock-exam-label {
+    background-color: #6930c3;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-left: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+Candidate ID styling
+.candidate-id {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    margin-left: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+}
+
+.candidate-id:before {
+    content: "ID: ";
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.navigation {
+    display: flex;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+}
+
+.nav-item {
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #2b2d42;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    background-color: rgba(94, 96, 206, 0.1);
+}
+
+.topics {
+    color: #5e60ce;
+    font-weight: 600;
+}
+
+.main-content {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 15px;
+    background-color: white;
+}
+
+.question-panel,
+.options-panel {
+    flex: 2;
+    padding: 20px;
+    min-width: 300px;
+}
+
+.question-box,
+.options-box {
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.question-box:hover,
+.options-box:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.options label {
+    display: block;
+    padding: 10px 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin: 8px 0;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    color: #2b2d42;
+    border-left: 3px solid transparent;
+}
+
+.options label:hover {
+    background-color: rgba(94, 96, 206, 0.1);
+    border-left: 3px solid #5e60ce;
+}
+
+.options input {
+    margin-right: 12px;
+}
+
+.bottom-navigation {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 0 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.save-next-btn {
+    background-color: #5e60ce;
+    color: white;
+}
+
+.prev-btn {
+    background-color: #5e60ce; 
+    color: white;
+}
+
+.repeat-btn {
+    background-color: #6930c3;
+    color: white;
+}
+
+.submit-btn {
+    background-color: #f72585;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.selected {
+    background-color: rgba(94, 96, 206, 0.2) !important;
+    border-left: 3px solid #5e60ce !important;
+    font-weight: 600;
+}
+
+/* Hide the debug log completely */
+#debug-log {
+    display: none !important;
+}
+
+/* Video element styling */
+#video {
+    width: 250px;
+    height: 200px;
+    margin: 10px;
+    border: 3px solid #5e60ce;
+    border-radius: 10px;
+    object-fit: cover;
+    order: -1; /* Makes video appear first in flex order */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+#video:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+}
+
+/* Accessibility focus indicators */
+button:focus,
+label:focus {
+    outline: 3px solid #64dfdf;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .main-content {
+        flex-direction: column;
+    }
+    #video {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+    }
+}
+
+/* Navigation items */
+.navigation .nav-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.navigation .nav-item:hover {
+    background-color: rgba(94, 96, 206, 0.1);
+}
+
+.navigation .nav-item.active {
+    background-color: #5e60ce;
+    color: white;
+}
+
+.navigation .topics {
+    font-weight: bold;
+    background-color: rgba(94, 96, 206, 0.1);
+    color: #5e60ce;
+}
+
+/* Decorative elements */
+.container::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 150px;
+    height: 150px;
+    background-color: rgba(100, 223, 223, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.container::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    right: 10%;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(94, 96, 206, 0.1);
+    border-radius: 50%;
+    z-index: -1;
+}
+
+/* Hide face recognition notification messages */
+.recognition-message, 
+.face-notification, 
+.recognition-status {
+    display: none !important;
+}
