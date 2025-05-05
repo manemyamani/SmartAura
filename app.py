@@ -7,6 +7,12 @@ import os
 import time
 import hashlib
 import sqlite3
+import base64
+from PIL import Image
+import base64
+import cv2
+import numpy as np
+from flask import request, jsonify, session
 
 app = Flask(__name__)
 DATABASE = "auraassist.db"
@@ -478,6 +484,58 @@ def generate_frames():
 @app.route('/video_feed')  
 def video_feed():  
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')  
+# @app.route('/verify_identity_live', methods=['POST'])
+# def verify_identity_live():
+#     if 'user_id' not in session:
+#         return jsonify({"success": False, "error": "Unauthorized"}), 401
+
+#     data = request.get_json()
+#     image_data = data.get("image")
+
+#     if not image_data:
+#         return jsonify({"success": False, "error": "No image data provided"}), 400
+
+#     try:
+#         # Decode base64 image
+#         header, encoded = image_data.split(",", 1)
+#         img_bytes = base64.b64decode(encoded)
+#         np_arr = np.frombuffer(img_bytes, np.uint8)
+#         frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+#         # Convert to RGB for face_recognition
+#         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+#         locations = face_recognition.face_locations(frame_rgb)
+
+#         if len(locations) != 1:
+#             return jsonify({"success": False, "error": "No or multiple faces detected"}), 403
+
+#         # Encode current face
+#         current_encoding = face_recognition.face_encodings(frame_rgb, locations)[0]
+
+#         # Load reference face
+#         user_id = session['user_id']
+#         ref_path = os.path.join(KNOWN_FACES_DIR, f"{user_id}.jpg")
+
+#         if not os.path.exists(ref_path):
+#             return jsonify({"success": False, "error": "Reference image not found"}), 404
+
+#         ref_image = face_recognition.load_image_file(ref_path)
+#         ref_encoding_list = face_recognition.face_encodings(ref_image)
+
+#         if not ref_encoding_list:
+#             return jsonify({"success": False, "error": "Failed to encode reference image"}), 500
+
+#         ref_encoding = ref_encoding_list[0]
+
+#         # Perform comparison
+#         tolerance = 0.65  # relaxed tolerance for liveliness and lighting
+#         is_match = face_recognition.compare_faces([ref_encoding], current_encoding, tolerance=tolerance)[0]
+
+#         return jsonify({"success": True if is_match else False}), 200
+
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 if __name__ == '__main__':

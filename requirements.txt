@@ -1,0 +1,7 @@
+Flask
+gunicorn
+opencv-python
+dlib==19.24.0
+face-recognition
+numpy
+Pillow

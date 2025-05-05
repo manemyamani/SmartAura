@@ -174,10 +174,8 @@
             }
         }
 
-    //     function submitExam() {
-    // speechSynthesis.cancel();
-    // speakText("Your exam is being submitted. Please wait.");
-    let awaitingSubmitConfirmation = false;
+        // Variable to track if we're in confirmation mode
+let awaitingSubmitConfirmation = false;
 
 // Update the submitExam function to include confirmation
 // Accept a flag to indicate if submission is due to malpractice
@@ -208,7 +206,6 @@ async function submitExam(fromMalpractice = false) {
         speakText("Your exam is being submitted. Please wait.");
     }
 
-
     let assessmentId = document.getElementById("assessmentId").value;
     let userId = document.getElementById("userId").value;
 
@@ -216,7 +213,9 @@ async function submitExam(fromMalpractice = false) {
         speakText("Error: Assessment ID or User ID is missing. Please restart the exam.");
         return;
     }
+
     saveCurrentResponses();
+
     let responses = {
         assessment_id: assessmentId,
         user_id: userId
@@ -235,6 +234,7 @@ async function submitExam(fromMalpractice = false) {
         responses[`response${question.id}`] = userResponse;
     });
 
+    // ✅ Actually submit to backend
     fetch("/submit_exam", {
         method: "POST",
         headers: {
@@ -242,25 +242,183 @@ async function submitExam(fromMalpractice = false) {
         },
         body: JSON.stringify(responses)
     })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            if (!fromMalpractice) {
                 speakText("Exam Completed! Your responses have been submitted successfully.");
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 5000);
-            } else {
-                speakText("Error submitting exam. Please contact the exam administrator.");
-                console.error("Error submitting exam:", result.error);
             }
-        })
-        .catch(error => {
-            speakText("Error submitting exam. Please contact the exam administrator.");
-            console.error("Submission error:", error);
-        });
+
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 3000); // 🔄 Redirect to home
+        } else {
+            speakText("Error submitting exam. Please contact the administrator.");
+            console.error("Submit error:", result.error);
+            examAlreadySubmitted = false; // Retry allowed
+        }
+    })
+    .catch(error => {
+        speakText("Submission failed. Please check your network or contact support.");
+        console.error("Network error:", error);
+        examAlreadySubmitted = false; // Retry allowed
+    });
 }
 
-        function reportRemainingTime() {
+
+
+
+
+// Update the processSpeechCommand function to handle confirmation responses
+function processSpeechCommand(transcript) {
+    transcript = transcript.toLowerCase().trim();
+    log("Recognized: " + transcript);
+
+    // First check if we're awaiting confirmation for submission
+    if (awaitingSubmitConfirmation) {
+        const confirmPatterns = ["yes", "yes submit", "confirm", "submit", "confirm submit"];
+        const cancelPatterns = ["no", "cancel", "continue", "keep going", "don't submit"];
+        
+        function containsAny(patterns) {
+            return patterns.some(pattern => transcript.includes(pattern));
+        }
+        
+        if (containsAny(confirmPatterns)) {
+            log("Submission confirmed");
+            // Call submitExam again, which will proceed with actual submission
+            submitExam();
+            return;
+        } else if (containsAny(cancelPatterns)) {
+            log("Submission cancelled");
+            awaitingSubmitConfirmation = false;
+            speakText("Submission cancelled. Continuing with the exam.");
+            return;
+        } else {
+            speakText("Please say 'yes submit' to confirm submission or 'cancel' to continue the exam.");
+            return;
+        }
+    }
+
+    const option1Patterns = ["option 1", "option one", "first option", "choice 1", "answer 1"];
+    const option2Patterns = ["option 2", "option two", "second option", "choice 2", "answer 2"];
+    const option3Patterns = ["option 3", "option three", "third option", "choice 3", "answer 3"];
+    const option4Patterns = ["option 4", "option four", "fourth option", "choice 4", "answer 4"];
+
+    const nextPatterns = ["next", "next question"];
+    const prevPatterns = ["previous", "previous question", "go back", "prev"];
+    const repeatPatterns = ["repeat", "repeat question", "read question"];
+    const submitPatterns = ["submit", "submit exam", "finish", "finish exam"];
+    const timePatterns = ["time", "time left", "remaining time", "remaining tym"];
+    
+    const sectionTransitionPattern = "move to section";
+    
+    function containsAny(patterns) {
+        return patterns.some(pattern => transcript.includes(pattern));
+    }
+    
+    // Check for section transition command
+    if (transcript.includes(sectionTransitionPattern)) {
+        const parts = transcript.split(sectionTransitionPattern);
+        
+        if (parts.length > 1) {
+            const requestedSection = parts[1].trim();
+            const availableSections = Object.keys(questionsBySubject);
+            const matchedSection = availableSections.find(section => 
+                section.toLowerCase() === requestedSection ||
+                section.toLowerCase().includes(requestedSection)
+            );
+            
+            if (matchedSection) {
+                log(`Switching to ${matchedSection} section by voice command`);
+                setActiveSubject(matchedSection);
+                return;
+            } else {
+                speakText(`Section ${requestedSection} not found. Available sections are: ${availableSections.join(", ")}`);
+                return;
+            }
+        }
+    }
+    
+    // Check for option selection commands
+    if (containsAny(option1Patterns)) {
+        log("Selecting option 1");
+        selectOption("opt1");
+        return;
+    }
+    else if (containsAny(option2Patterns)) {
+        log("Selecting option 2");
+        selectOption("opt2");
+        return;
+    }
+    else if (containsAny(option3Patterns)) {
+        log("Selecting option 3");
+        selectOption("opt3");
+        return;
+    }
+    else if (containsAny(option4Patterns)) {
+        log("Selecting option 4");
+        selectOption("opt4");
+        return;
+    }
+    
+    // Check for navigation commands
+    if (containsAny(nextPatterns)) {
+        log("Going to next question");
+        goToNextQuestion();
+        return;
+    }
+    else if (containsAny(prevPatterns)) {
+        log("Going to previous question");
+        goToPreviousQuestion();
+        return;
+    }
+    else if (containsAny(repeatPatterns)) {
+        log("Repeating question");
+        readInstructions();
+        return;
+    }
+    else if (containsAny(submitPatterns)) {
+        log("Initiating exam submission");
+        submitExam(); // This will trigger the confirmation flow if needed
+        return;
+    }
+    else if (containsAny(timePatterns)) {
+        log("Reporting remaining time");
+        reportRemainingTime();
+        return;
+    }
+
+    // Check for direct section name mentions
+    let sectionFound = false;
+    Object.keys(questionsBySubject).forEach(subject => {
+        if (transcript.includes(subject.toLowerCase())) {
+            log(`Switching to ${subject} section`);
+            setActiveSubject(subject);
+            sectionFound = true;
+            return;
+        }
+    });
+    
+    if (sectionFound) {
+        return;
+    }
+    
+    // If we get here, no command was recognized
+    log("Command not recognized: " + transcript);
+    speakText("Command not recognized. Please try again.");
+}
+
+// Also need to update the click handler for the submit button
+document.addEventListener("DOMContentLoaded", function() {
+    const submitButton = document.getElementById("submit-exam");
+    if (submitButton) {
+        submitButton.addEventListener("click", function(e) {
+            e.preventDefault();
+            submitExam();
+        });
+    }
+});
+       function reportRemainingTime() {
             const hours = Math.floor(examDuration / 3600);
             const minutes = Math.floor((examDuration % 3600) / 60);
             const seconds = examDuration % 60;
@@ -458,50 +616,80 @@ function goToPreviousQuestion() {
 
         let recognitionRunning = false;
 
+
 function processSpeechCommand(transcript) {
     transcript = transcript.toLowerCase().trim();
     log("Recognized: " + transcript);
-    if (awaitingSubmitConfirmation) {
-        const confirmPatterns = ["yes", "yes submit", "confirm", "submit", "confirm submit"];
-        const cancelPatterns = ["no", "cancel", "continue", "keep going", "don't submit"];
-        
-        function containsAny(patterns) {
-            return patterns.some(pattern => transcript.includes(pattern));
-        }
-        
-        if (containsAny(confirmPatterns)) {
-            log("Submission confirmed");
-            // Call submitExam again, which will proceed with actual submission
-            submitExam();
-            return;
-        } else if (containsAny(cancelPatterns)) {
-            log("Submission cancelled");
-            awaitingSubmitConfirmation = false;
-            speakText("Submission cancelled. Continuing with the exam.");
-            return;
-        } else {
-            speakText("Please say 'yes submit' to confirm submission or 'cancel' to continue the exam.");
-            return;
-        }
-    }
 
+    // Define all valid command patterns
     const option1Patterns = ["option 1", "option one", "first option", "choice 1", "answer 1"];
     const option2Patterns = ["option 2", "option two", "second option", "choice 2", "answer 2"];
     const option3Patterns = ["option 3", "option three", "third option", "choice 3", "answer 3"];
     const option4Patterns = ["option 4", "option four", "fourth option", "choice 4", "answer 4"];
-
+    
     const nextPatterns = ["next", "next question"];
     const prevPatterns = ["previous", "previous question", "go back", "prev"];
     const repeatPatterns = ["repeat", "repeat question", "read question"];
     const submitPatterns = ["submit", "submit exam", "finish", "finish exam"];
     const timePatterns = ["time", "time left", "remaining time", "remaining tym"];
     
-    const sectionTransitionPattern = "move to section";
+    // Helper function to check if transcript contains any pattern
     function containsAny(patterns) {
         return patterns.some(pattern => transcript.includes(pattern));
     }
-    if (transcript.includes(sectionTransitionPattern)) {
-        const parts = transcript.split(sectionTransitionPattern);
+    
+    // Handle option selection commands
+    if (containsAny(option1Patterns)) {
+        log("Selecting option 1");
+        selectOption("opt1");
+        return;
+    }
+    if (containsAny(option2Patterns)) {
+        log("Selecting option 2");
+        selectOption("opt2");
+        return;
+    }
+    if (containsAny(option3Patterns)) {
+        log("Selecting option 3");
+        selectOption("opt3");
+        return;
+    }
+    if (containsAny(option4Patterns)) {
+        log("Selecting option 4");
+        selectOption("opt4");
+        return;
+    }
+    
+    // Handle navigation commands
+    if (containsAny(nextPatterns)) {
+        log("Going to next question");
+        goToNextQuestion();
+        return;
+    }
+    if (containsAny(prevPatterns)) {
+        log("Going to previous question");
+        goToPreviousQuestion();
+        return;
+    }
+    if (containsAny(repeatPatterns)) {
+        log("Repeating question");
+        readInstructions();
+        return;
+    }
+    if (containsAny(submitPatterns)) {
+        log("Submitting exam");
+        submitExam();
+        return;
+    }
+    if (containsAny(timePatterns)) {
+        log("Reporting remaining time");
+        reportRemainingTime();
+        return;
+    }
+    
+    // Check for section transition command
+    if (transcript.includes("move to section")) {
+        const parts = transcript.split("move to section");
         
         if (parts.length > 1) {
             const requestedSection = parts[1].trim();
@@ -521,60 +709,17 @@ function processSpeechCommand(transcript) {
             }
         }
     }
-    
-    if (containsAny(option1Patterns)) {
-        log("Selecting option 1");
-        selectOption("opt1");
-        return;
-    }
-    else if (containsAny(option2Patterns)) {
-        log("Selecting option 2");
-        selectOption("opt2");
-        return;
-    }
-    else if (containsAny(option3Patterns)) {
-        log("Selecting option 3");
-        selectOption("opt3");
-        return;
-    }
-    else if (containsAny(option4Patterns)) {
-        log("Selecting option 4");
-        selectOption("opt4");
-        return;
-    }
-    if (containsAny(nextPatterns)) {
-        log("Going to next question");
-        goToNextQuestion();
-        return;
-    }
-    else if (containsAny(prevPatterns)) {
-        log("Going to previous question");
-        goToPreviousQuestion();
-        return;
-    }
-    else if (containsAny(repeatPatterns)) {
-        log("Repeating question");
-        readInstructions();
-        return;
-    }
-    else if (containsAny(submitPatterns)) {
-        log("Submitting exam");
-        submitExam();
-        return;
-    }
-    else if (containsAny(timePatterns)) {
-        log("Reporting remaining time");
-        reportRemainingTime();
-        return;
-    }
+
+    // Check for direct section name mentions
     let sectionFound = false;
     Object.keys(questionsBySubject).forEach(subject => {
         if (transcript.includes(subject.toLowerCase())) {
             log(`Switching to ${subject} section`);
             setActiveSubject(subject);
-            return;
+            sectionFound = true;
         }
     });
+    
     if (sectionFound) {
         return;
     }
@@ -583,16 +728,6 @@ function processSpeechCommand(transcript) {
     log("Command not recognized: " + transcript);
     speakText("Command not recognized. Please try again.");
 }
-
-document.addEventListener("DOMContentLoaded", function() {
-    const submitButton = document.getElementById("submit-exam");
-    if (submitButton) {
-        submitButton.addEventListener("click", function(e) {
-            e.preventDefault();
-            submitExam();
-        });
-    }
-});
         recognition.onresult = function (event) {
             const last = event.results.length - 1;
             let transcript = event.results[last][0].transcript;
@@ -600,20 +735,27 @@ document.addEventListener("DOMContentLoaded", function() {
         };
 
         recognition.onend = function () {
-            if (recognitionRunning) {
-                log("Recognition restarted");
+    if (!examAlreadySubmitted && recognitionRunning) {
+        log("Recognition restarted");
+        setTimeout(() => {
+            try {
+                recognition.start();
+            } catch (e) {
+                log("Error restarting recognition: " + e.message);
                 setTimeout(() => {
-                    try {
-                        recognition.start();
-                    } catch (e) {
-                        log("Error restarting recognition: " + e.message);
-                        setTimeout(() => {
-                            if (recognitionRunning) recognition.start();
-                        }, 10000);
+                    if (!examAlreadySubmitted && recognitionRunning) {
+                        try {
+                            recognition.start();
+                        } catch (err) {
+                            log("Retry failed: " + err.message);
+                        }
                     }
-                }, 250);
+                }, 10000);
             }
-        };
+        }, 250);
+    }
+};
+
 
         recognition.onerror = function (event) {
             log("Recognition error: " + event.error);
@@ -673,99 +815,171 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     </script>
     <script>
-    async function setupCamera() {
-  const video = document.getElementById('video');
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
-  await new Promise((resolve) => (video.onloadedmetadata = resolve));
+        let failedVerifications = 0;
+const MAX_VERIFICATION_FAILURES = 3;
+
+
+        async function setupCamera() {
+          const video = document.getElementById('video');
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          await new Promise((resolve) => (video.onloadedmetadata = resolve));
+        }
+      
+        async function monitor() {
+          const model = await blazeface.load();
+          const video = document.getElementById('video');
+      
+          let multipleFaceDetections = 0;
+          let isCurrentlyWarning = false;
+          let isLookingAwayWarning = false;
+          let consecutiveMultipleFaces = 0;
+          let lastDetectionTime = Date.now();
+      
+          setInterval(async () => {
+            try {
+              const predictions = await model.estimateFaces(video, false);
+      
+              if (!predictions || !Array.isArray(predictions)) {
+                log("Invalid face detection result");
+                return;
+              }
+      
+              const currentTime = Date.now();
+              const timeSinceLastDetection = currentTime - lastDetectionTime;
+              lastDetectionTime = currentTime;
+      
+              if (timeSinceLastDetection > 5000) {
+                consecutiveMultipleFaces = 0;
+              }
+      
+              if (predictions.length > 1) {
+                if (!isCurrentlyWarning) {
+                  speakText("Multiple faces detected. Only one person should be visible.");
+                  isCurrentlyWarning = true;
+                  log("Multiple faces detected: " + predictions.length);
+                }
+      
+                consecutiveMultipleFaces++;
+      
+                log("Consecutive multiple faces: " + consecutiveMultipleFaces);
+      
+                if (consecutiveMultipleFaces == 3) {
+                    log("Multiple face violations threshold reached. Submitting exam...");
+                    speakText("Multiple face violations detected. Submitting exam.");
+                    submitExam(true);  // 🛡️ skip confirmation, auto-submit due to malpractice
+                }
+              } else {
+                isCurrentlyWarning = false;
+      
+                if (consecutiveMultipleFaces > 0) {
+                  consecutiveMultipleFaces--;
+                }
+      
+                if (predictions.length === 1) {
+                  const face = predictions[0];
+                  if (face.landmarks && face.landmarks.length >= 3) {
+                    const leftEye = face.landmarks[0];
+                    const rightEye = face.landmarks[1];
+                    const nose = face.landmarks[2];
+                    const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
+                    const nosePosition = nose[0] - ((leftEye[0] + rightEye[0]) / 2);
+                  }
+                }
+              }
+            } catch (error) {
+              log("Face detection error: " + error.message);
+            }
+          }, 1000);
+        }
+      
+        // 🔄 Live verification call to backend
+        async function captureSnapshotBase64() {
+    const video = document.getElementById('video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    return canvas.toDataURL('image/jpeg'); // returns base64 string
 }
 
-async function setupCamera() {
-  const video = document.getElementById('video');
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
-  await new Promise((resolve) => (video.onloadedmetadata = resolve));
-}
+let malpracticeSubmitted = false;
+let alertGivenOnceForFails = 0;  // 💬 track how many alerts spoken (max 2)
 
-async function monitor() {
-  const model = await blazeface.load();
-  const video = document.getElementById('video');
-  
-  let multipleFaceDetections = 0;
-  let isCurrentlyWarning = false;
-  let isLookingAwayWarning = false;
-  let consecutiveMultipleFaces = 0;
-  let lastDetectionTime = Date.now();
-  
-  setInterval(async () => {
-    try {
-      const predictions = await model.estimateFaces(video, false);
-      
-      if (!predictions || !Array.isArray(predictions)) {
-        log("Invalid face detection result");
-        return;
-      }
-      
-      const currentTime = Date.now();
-      const timeSinceLastDetection = currentTime - lastDetectionTime;
-      lastDetectionTime = currentTime;
-      
-      if (timeSinceLastDetection > 5000) {
-        consecutiveMultipleFaces = 0;
-      }
-
-      if (predictions.length > 1) {
-        if (!isCurrentlyWarning) {
-          speakText("Multiple faces detected. Only one person should be visible.");
-          isCurrentlyWarning = true;
-          log("Multiple faces detected: " + predictions.length);
-        }
-        
-        consecutiveMultipleFaces++;
-        
-        log("Consecutive multiple faces: " + consecutiveMultipleFaces);
-        
-        if (consecutiveMultipleFaces == 3) {
-          log("Multiple face violations threshold reached. Submitting exam...");
-          speakText("Multiple face violations detected. Submitting exam.");
-          
-          submitExam(true);
-        }
-      } else {
-        
-        isCurrentlyWarning = false;        
-        
-        if (consecutiveMultipleFaces > 0) {
-          consecutiveMultipleFaces--;
-        }
-        
-        if (predictions.length === 1) {
-          const face = predictions[0];
-          if (face.landmarks && face.landmarks.length >= 3) {
-            const leftEye = face.landmarks[0];
-            const rightEye = face.landmarks[1];
-            const nose = face.landmarks[2];
-            const eyeDistance = Math.abs(leftEye[0] - rightEye[0]);
-            const nosePosition = nose[0] - ((leftEye[0] + rightEye[0]) / 2);
-          }
-        }
-      }
-    } catch (error) {
-      log("Face detection error: " + error.message);
-    }
-  }, 1000);
-}
-async function init() {
+async function verifyLiveFace() {
   try {
-    await setupCamera();
-    log("Camera initialized successfully");
-    monitor();
-    log("Face monitoring started");
+    if (malpracticeSubmitted) return;
+
+    const imageData = await captureSnapshotBase64();
+
+    const response = await fetch("/verify_identity_live", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ image: imageData })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      failedVerifications++;
+      console.warn(`🔒 Live verification failed (${failedVerifications}/${MAX_VERIFICATION_FAILURES})`);
+
+      if (failedVerifications < MAX_VERIFICATION_FAILURES && alertGivenOnceForFails < 2) {
+        speakText("Face not detected. This will be considered as malpractice. Please stay in the frame and ensure only the authorized candidate is present.");
+        alertGivenOnceForFails++;
+      }
+
+      if (failedVerifications >= MAX_VERIFICATION_FAILURES && !malpracticeSubmitted) {
+        malpracticeSubmitted = true;
+
+        // 🔊 Speak first, then submit after slight delay to ensure voice alert is heard
+        speakText("Due to malpractice, your exam is being submitted.");
+        setTimeout(() => {
+          submitExam(true);  // 🚨 Submit due to repeated failure
+        }, 2500);  // ⏱️ delay to allow alert to play
+      }
+
+    } else {
+      failedVerifications = 0;
+      alertGivenOnceForFails = 0;
+    }
+
   } catch (error) {
-    log("Camera initialization error: " + error.message);
+    console.error("Live verification error:", error);
   }
 }
-init();
-</script>
-</body>
-</html>
+
+
+
+
+
+      
+        // 🔁 Run identity verification every 15 seconds
+        function monitorFaceContinuously() {
+          setInterval(() => {
+            verifyLiveFace();
+          }, 15000); // every 15 seconds
+        }
+      
+        async function init() {
+          try {
+            await setupCamera();
+            log("Camera initialized successfully");
+            monitor();
+            monitorFaceContinuously(); // 🔄 Start live identity verification
+            log("Face monitoring started");
+          } catch (error) {
+            log("Camera initialization error: " + error.message);
+          }
+        }
+      
+        init();
+      </script>      
+      </body>
+      </html>
